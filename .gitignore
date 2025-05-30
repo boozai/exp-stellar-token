@@ -1,0 +1,4 @@
+.soroban/
+.stellar/
+target/
+opt/
