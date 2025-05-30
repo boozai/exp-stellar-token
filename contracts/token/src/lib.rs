@@ -26,4 +26,8 @@ impl Contract {
         env.storage().persistent().set(&to, &to_bal);
         env.events().publish((symbol_short!("transfer"), &from, &to), amount);
     }
+
+    pub fn balance(env: Env, id: Address) -> i128 {
+        env.storage().persistent().get(&id).unwrap_or_default()
+    }
 }
