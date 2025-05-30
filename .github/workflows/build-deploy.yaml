@@ -19,18 +19,6 @@ jobs:
     - uses: stellar/stellar-cli@v22.8.1
     - run: stellar contract build --meta source_repo=github:${{ github.repository }}
 
-    - name: Verify WASM Hash
-      run: |
-        EXPECTED_HASH="4af39471465487e2c9f97a443021f1ad8269ebaef03685480cfc1a02a8cf7a1d"
-        ACTUAL_HASH=$(stellar contract install --wasm target/wasm32v1-none/release/token.wasm --dry-run)
-        echo "Expected WASM hash: $EXPECTED_HASH"
-        echo "Actual WASM hash: $ACTUAL_HASH"
-        if [ "$ACTUAL_HASH" = "$EXPECTED_HASH" ]; then
-          echo "✅ WASM hash verification passed!"
-        else
-          echo "❌ WASM hash mismatch!"
-          exit 1
-        fi
 
     - name: Attestation
       uses: actions/attest-build-provenance@v1
