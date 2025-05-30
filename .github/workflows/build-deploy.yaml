@@ -17,19 +17,38 @@ jobs:
     - run: rustup target add wasm32v1-none
 
     - uses: stellar/stellar-cli@v22.8.1
-    - run: stellar contract build --out-dir opt/ --meta source_repo=github:${{ github.repository }}
+    - run: stellar contract build --meta source_repo=github:${{ github.repository }}
+
+    - name: Verify WASM Hash
+      run: |
+        EXPECTED_HASH="4af39471465487e2c9f97a443021f1ad8269ebaef03685480cfc1a02a8cf7a1d"
+        ACTUAL_HASH=$(stellar contract install --wasm target/wasm32v1-none/release/token.wasm --dry-run)
+        echo "Expected WASM hash: $EXPECTED_HASH"
+        echo "Actual WASM hash: $ACTUAL_HASH"
+        if [ "$ACTUAL_HASH" = "$EXPECTED_HASH" ]; then
+          echo "✅ WASM hash verification passed!"
+        else
+          echo "❌ WASM hash mismatch!"
+          exit 1
+        fi
 
     - name: Attestation
       uses: actions/attest-build-provenance@v1
+      id: attestation
       with:
-        subject-name: contract
-        subject-path: opt/token.wasm
+        subject-name: token-contract
+        subject-path: target/wasm32v1-none/release/token.wasm
+
+    - name: Display Attestation Info
+      run: |
+        echo "Attestation created successfully!"
+        echo "Check the Actions run summary for attestation details"
 
     - name: Upload to Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: hello_world.wasm
-        path: opt/token.wasm
+        name: token.wasm
+        path: target/wasm32v1-none/release/token.wasm
 
     - name: Setup CLI for Testnet
       run: stellar network use testnet
@@ -40,7 +59,17 @@ jobs:
         stellar keys use deployer
 
     - name: Deploy to Testnet
-      run: stellar contract deploy --wasm opt/token.wasm --alias contract
+      run: stellar contract deploy --wasm target/wasm32v1-none/release/token.wasm --alias contract
+
+    - name: Install Contract with WASM Hash (Verifiable)
+      run: |
+        WASM_HASH=$(stellar contract install --wasm target/wasm32v1-none/release/token.wasm)
+        echo "Contract installed with WASM hash: $WASM_HASH"
+        stellar contract deploy --wasm-hash $WASM_HASH --alias contract-verifiable
 
     - name: Check Deployment
-      run: stellar contract info build --id contract
+      run: |
+        echo "Checking deployment with alias 'contract':"
+        stellar contract info build --id contract
+        echo "Checking deployment with alias 'contract-verifiable':"
+        stellar contract info build --id contract-verifiable
