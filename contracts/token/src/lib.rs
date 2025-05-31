@@ -34,7 +34,8 @@ fn read_symbol(e: &Env) -> String {
 }
 
 #[contractimpl]
-impl Token {    pub fn __constructor(e: Env, admin: Address, name: String, symbol: String) {
+impl Token {    
+    pub fn __constructor(e: Env, admin: Address, name: String, symbol: String) {
         write_admin(&e, &admin);
         write_name(&e, &name);
         write_symbol(&e, &symbol);
