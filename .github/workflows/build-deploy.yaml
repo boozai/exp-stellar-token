@@ -46,18 +46,9 @@ jobs:
         stellar keys generate deployer --fund
         stellar keys use deployer
 
-    - name: Deploy to Testnet
-      run: stellar contract deploy --wasm target/wasm32v1-none/release/token.wasm --alias contract
 
-    - name: Install Contract with WASM Hash (Verifiable)
+    - name: Install Contract with WASM Hash to TestNet (Verifiable)
       run: |
         WASM_HASH=$(stellar contract install --wasm target/wasm32v1-none/release/token.wasm)
         echo "Contract installed with WASM hash: $WASM_HASH"
-        stellar contract deploy --wasm-hash $WASM_HASH --alias contract-verifiable
 
-    - name: Check Deployment
-      run: |
-        echo "Checking deployment with alias 'contract':"
-        stellar contract info build --id contract
-        echo "Checking deployment with alias 'contract-verifiable':"
-        stellar contract info build --id contract-verifiable
