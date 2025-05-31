@@ -2,13 +2,19 @@
 use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env, String, Symbol};
 use soroban_sdk::token::{self, Interface as _};
 
+const ADMIN: Symbol = symbol_short!("ADMIN");
 const NAME: Symbol = symbol_short!("NAME");
 const SYMBOL: Symbol = symbol_short!("SYMBOL");
 
 #[contract]
-pub struct Token {
-    pub name: String,
-    pub symbol: String,
+pub struct Token;
+
+fn write_admin(e: &Env, name: &Address) {
+    e.storage().instance().set(&ADMIN, name);
+}
+
+fn read_admin(e: &Env) -> Address {
+    e.storage().instance().get(&ADMIN).unwrap()
 }
 
 fn write_name(e: &Env, name: &String) {
@@ -29,12 +35,22 @@ fn read_symbol(e: &Env) -> String {
 
 #[contractimpl]
 impl Token {    pub fn __constructor(e: Env, _admin: Address, name: String, symbol: String) {
+        write_admin(&e, &_admin);
         write_name(&e, &name);
         write_symbol(&e, &symbol);
     }
 
     pub fn mint(env: Env, to: Address, amount: i128) {
+        let admin = read_admin(&env);
+        admin.require_auth();
+        if amount <= 0 {
+            panic!("Amount must be greater than zero");
+        }
         let mut to_bal: i128 = env.storage().persistent().get(&to).unwrap_or_default();
+        if to_bal + amount <= 0 {
+            panic!("Exceeds i128 max value");
+        }
+
         to_bal += amount;
         env.storage().persistent().set(&to, &to_bal);
         env.events().publish((symbol_short!("mint"), &to), amount);
