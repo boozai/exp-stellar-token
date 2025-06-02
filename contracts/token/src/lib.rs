@@ -48,7 +48,7 @@ impl Token {
             panic!("Amount must be greater than zero");
         }
         let mut to_bal: i128 = env.storage().persistent().get(&to).unwrap_or_default();
-        if to_bal + amount <= 0 {
+        if to_bal + amount > i128::MAX {
             panic!("Exceeds i128 max value");
         }
 
