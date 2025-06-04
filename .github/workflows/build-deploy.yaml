@@ -52,3 +52,23 @@ jobs:
         WASM_HASH=$(stellar contract install --wasm target/wasm32v1-none/release/token.wasm)
         echo "Contract installed with WASM hash: $WASM_HASH"
 
+    - name: Deploy Contract to Testnet
+      run: |
+        CONTRACT_ID=$(stellar contract deploy --wasm target/wasm32v1-none/release/token.wasm)
+        echo "CONTRACT_ID=$CONTRACT_ID" >> $GITHUB_ENV
+
+    - name: Mint Token
+      run: |
+        DEPLOYER_ADDRESS=$(stellar keys address deployer)
+        stellar contract invoke --id "$CONTRACT_ID" -- mint --to "$DEPLOYER_ADDRESS" --amount 1000
+
+    - name: Create Soroswap Pair
+      run: |
+        stellar contract invoke --id CBVFAI4TEJCHIICFUYN2C5VYW5TD3CKPIZ4S5P5LVVUWMF5MRLJH77NH \
+          -- create_pair --token_a "$CONTRACT_ID" --token_b native
+
+    - name: Add Liquidity via Soroswap Router
+      run: |
+        stellar contract invoke --id CACIQ6HWPBEMPQYKRRAZSM6ZQORTBTS7DNXCRTI6NQYMUP2BHOXTBUVD \
+          -- add_liquidity --token_a "$CONTRACT_ID" --token_b native --amount_a 100 --amount_b 100
+
