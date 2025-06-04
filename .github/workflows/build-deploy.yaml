@@ -54,7 +54,8 @@ jobs:
 
     - name: Deploy Contract to Testnet
       run: |
-        CONTRACT_ID=$(stellar contract deploy --wasm target/wasm32v1-none/release/token.wasm)
+        DEPLOYER_ADDRESS=$(stellar keys address deployer)
+        CONTRACT_ID=$(stellar contract deploy --wasm target/wasm32v1-none/release/token.wasm --admin "$DEPLOYER_ADDRESS" --name "ExampleToken" --symbol "EXT")
         echo "CONTRACT_ID=$CONTRACT_ID" >> $GITHUB_ENV
 
     - name: Mint Token
